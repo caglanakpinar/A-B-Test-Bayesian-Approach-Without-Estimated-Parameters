@@ -7,8 +7,6 @@ import utils
 from ab_test_generator import get_random_ab_test_generator
 
 
-
-
 def data_gathering(parameters):
     start_date = datetime.datetime.strptime(parameters['days_test_starts'], '%Y-%m-%d')
     end_date = datetime.datetime.strptime(parameters['days_test_starts'], '%Y-%m-%d')
@@ -86,6 +84,17 @@ def get_segments(df, start_date):
                          str(row['recency_segment']) + '_' +
                          str(row['frequency_segment']) + '_' + str(row['monetary_segment']), axis=1)
     return df
+
+def writing_output(insert_db, insert_db_rfm, parameters):
+    if parameters['is_there_any_prev_calcualtion_to_add_on']:
+        pred_ab_test = pd.read_csv('daily_ab_test_results.csv')
+        pd.concat([pred_ab_test, insert_db]).to_csv('daily_ab_test_results.csv')
+        if parameters['is_segmented']:
+            pred_ab_test_rfm = pd.read_csv('daily_ab_test_results_rfm.csv')
+            pd.concat([pred_ab_test_rfm, insert_db_rfm]).to_csv('daily_ab_test_results_rfm.csv')
+
+
+
 
 
 

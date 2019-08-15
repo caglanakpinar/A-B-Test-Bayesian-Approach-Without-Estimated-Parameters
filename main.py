@@ -15,8 +15,7 @@ parameters = {
     'is_from_db': True,
     'db_connection_values': configurations.connection_parameters,
     'is_data_randomly_generated': False, # if there is no data for run the a_b test
-    'is_randomly_generated_data_writing_db': True, # if you want to write ramdom ab test output into a db of table
-    'is_randomly_generated_data_writing_csv': True, # if you want to write ramdom ab test output into a csv
+    'is_there_any_prev_calcualtion_to_add_on': True, # your previos results for previouss days of ab test from csv
     'is_from_csv': False,  # if there is data that you want tu run
      # make sure control.csv, validation.csv are included to project, make sure same directory as project
      # columns are belongs; day, metrics (write metrics for calculating Conversion rate)
@@ -31,7 +30,7 @@ parameters = {
 def main(parameters):
     ab_test_total = data_access.data_gathering(parameters)
     daily_ab_test_results, daily_ab_test_results_segmented = ab_testing.test_data(ab_test_total, parameters)
-    
+    data_access.writing_output(ab_test_total,daily_ab_test_results_segmented, parameters)
 
 if __name__ == '__main__':
   main(parameters)
