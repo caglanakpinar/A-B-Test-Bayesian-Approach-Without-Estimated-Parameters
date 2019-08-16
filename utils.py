@@ -16,7 +16,7 @@ def error_print(data_access_fail, parameters):
         print("You are collecting data from DB connection. Make sure to update is_from_db parameter.")
         print("check your connections")
     if data_access_fail == 2.1:
-        if parameters.metrics == []:
+        if parameters['metrics'] == []:
             print("pls guide, what metrics of conversion rate will be tested?")
         else:
             print("pls make sure that data has column of 'day' ")

@@ -109,9 +109,14 @@ def get_ratio_list(lower_range, upper_range):
 
 def get_rfm_segmet_ratios(client_df):
     segment_dict = {}
+    client_df['rfm'] = client_df.apply(lambda row:
+                                       str(int(row['recency_segment'])) + '_' +
+                                       str(int(row['frequency_segment'])) + '_' +
+                                       str(int(row['monetary_segment'])) ,axis=1)
 
     segments_ratios_df = client_df.pivot_table(index='rfm',
-                                               aggfunc={'client_id': 'count'}).rename(columns={'client_id': 'count'})
+                                               aggfunc={'client_id': 'count'}
+                                               ).rename(columns={'client_id': 'count'}).reset_index()
     total_client_count = sum(list(segments_ratios_df['count']))
     segments_ratios_df['ratio'] = segments_ratios_df['count'] / total_client_count
     for rfm in list(segments_ratios_df['rfm'].unique()):
@@ -119,21 +124,21 @@ def get_rfm_segmet_ratios(client_df):
     return segment_dict, segments_ratios_df
 
 def get_random_ab_test_generator(start_date, end_date, client_df, parameters):
-    total_sessions = parameters.total_sessions
-    total_login = parameters.total_login
-    total_baskets = parameters.total_baskets
-    total_order_screen = parameters.total_order_screen
-    total_ordered = parameters.total_ordered
+    total_sessions = parameters['total_sessions']
+    total_login = parameters['total_login']
+    total_baskets = parameters['total_baskets']
+    total_order_screen = parameters['total_order_screen']
+    total_ordered = parameters['total_ordered']
     segment_dict, segments_ratios_df = get_rfm_segmet_ratios(client_df)
     ratio_list = get_ratio_list(constants.RANDOM_CLICK_RATIO_RANGES[0], constants.RANDOM_CLICK_RATIO_RANGES[1])
-    final_df = pd.DataFrame()
+    final_df_2 = pd.DataFrame()
     while start_date < end_date:
+        final_df = pd.DataFrame()
         for rfm in list(client_df['rfm'].unique()):
             print(rfm, len(client_df.query("rfm == @rfm")), segment_dict[rfm])
             _rfm_contol_sample, _rfm_validation_sample = control_validation_rfm_segment_sampling(segment_dict,
                                                                                                  client_df, rfm,
                                                                                                  total_sessions)
-
             # login
             _s_s_cont, _s_s_valid = get_sample_size(len(_rfm_contol_sample),
                                                     len(_rfm_validation_sample),
@@ -162,24 +167,30 @@ def get_random_ab_test_generator(start_date, end_date, client_df, parameters):
             print(len(_control_o_s), _s_s_cont, len(_valid_o_s), _s_s_valid)
             _control_o = random.sample(_control_o_s, _s_s_cont)
             _valid_o = random.sample(_valid_o_s, _s_s_valid)
-
             output_df = get_data_merged(_rfm_contol_sample, _rfm_validation_sample,
                                         _control_login, _valid_login,
                                         _control_basket, _valid_basket,
                                         _control_o_s, _valid_o_s,
                                         _control_o, _valid_o, rfm)
-
             final_df = output_df if len(final_df) == 0 else pd.concat([output_df, final_df])
-        start_date += start_date + datetime.timedelta(days=1)
-    final_df = random_data_generator_write_db(final_df, parameters)
-    return final_df
+        final_df['date'] = start_date
+        final_df_2 = final_df if len(final_df_2) == 0 else pd.concat([final_df_2, final_df])
+        start_date += datetime.timedelta(days=1)
+    final_df_2 = random_data_generator_write_db(final_df_2, parameters)
+    return final_df_2
 
 def random_data_generator_write_db(final_df, parameters):
     final_df = final_df.reset_index(drop=True).reset_index().rename(columns={'index': 'session_id'})
-    if parameters.is_randomly_generated_data_writing_db:
+
+    if parameters['is_randomly_generated_data_writing_db']:
+        last_session = get_last_ab_test_session_id(parameters['days_test_starts'])
+        final_df['session_id'] = final_df['session_id'] + last_session + 1
+        final_df['session_id'] = final_df['session_id'].apply(lambda x: str(x) + '_id')
+        final_df = final_df.fillna('-')
         insertDb = final_df.to_dict('results')
-        cursor = configurations.connection_parameters.connection_abtestdb.cursor()
+        cursor = configurations.connection_abtestdb.cursor()
         for row in insertDb:
+            print(row)
             _query = "INSERT INTO designingtest "
             _i_col = constants.INSERT_COLUMNS
             _values = " VALUES ('{}', '{}', '{}', {}, {}, '{}'".format(row['session_id'], row['client_id'],
@@ -193,11 +204,23 @@ def random_data_generator_write_db(final_df, parameters):
             _query = _query + _i_col + ')' + _values
 
             _query = _query + ')'
-            print(_query)
             cursor.execute(_query)
-            configurations.connection_parameters.connection_abtestdb.commit()
-    if parameters.is_randomly_generated_data_writing_csv:
+            configurations.connection_abtestdb.commit()
+        cursor.close()
+    if parameters['is_randomly_generated_data_writing_csv']:
         final_df.to_csv('ab_test.csv')
     return final_df
 
+def get_last_ab_test_session_id(date):
+    try:
+        query = """
+                SELECT
+                    session_id        
+                FROM designingtest WHERE date <= '{}'
+        """.format(str(date)[0:10])
+        df = pd.read_sql(query, configurations.connection_abtestdb)
+        last_session = int(df.to_dict('resutls')[-1]['session_id'].split('_')[0])
+    except:
+        last_session = 0
+    return last_session
 

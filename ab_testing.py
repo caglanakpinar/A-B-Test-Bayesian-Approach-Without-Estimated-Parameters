@@ -5,7 +5,7 @@ import random
 from scipy.stats import beta
 from scipy import stats
 from scipy.stats import chi2, chi2_contingency
-import constansts
+import constants
 
 
 
@@ -105,54 +105,54 @@ def test_control_validation_sets(ab_test_total, metric, day, rfm):
     return click_control / n_control, click_vald / n_vald, np.mean(wins) ,t_test_outputs, chi_squared_test_outputs
 
 def test_data(ab_test_total, parameters):
-    days = list(ab_test_total['day'].unique())
-    metrics = constansts.METRICS if parameters['metrics'] == [] else parameters['metrics']
     df_list = df_list_rfm = []
-    p_value_contol = p_value_validation = win_list = []
-    if  len(set(metrics) - set(list(ab_test_total.columns))) == 0:
-        for day in days:
-            print(" day :", str(day)[0:10])
-            for metric in metrics:
-                p_control, p_validation, win_ratio, t_test, chi_squared = test_control_validation_sets(ab_test_total, metric,
-                                                                                                       day, None)
-                df_list.append({'p_control': p_control,
-                                'p_validation': p_validation,
-                                'win_ratio': win_ratio,
-                                't_test_p_value': t_test[0],
-                                't_test_H0': t_test[1],
-                                't_test_left_tail': t_test[2][0],
-                                't_test_right_tail': t_test[2][1],
-                                'chi_squared_p_value': chi_squared[0],
-                                'chi_squared_H0': chi_squared[1],
-                                'bayesian_approach_confidence': win_ratio,
-                                'day': day,
-                                'metrics': metric
-                                })
-                if parameters['is_segmented']:
-                    if day == days[0]:
-                        rfm_segments = list(ab_test_total['rfm'].unique())
-                    for rfm in rfm_segments:
-                        print("rfm segment :", rfm)
-                        p_control, p_validation, win_ratio, t_test, chi_squared = test_control_validation_sets(ab_test_total,
-                                                                                                               metric, day,
+    if len(ab_test_total) != 0:
+        days = list(ab_test_total['day'].unique())
+        metrics = constants.METRICS if parameters['metrics'] == [] else parameters['metrics']
+        if  len(set(metrics) - set(list(ab_test_total.columns))) == 0:
+            for day in days:
+                print(" day :", str(day)[0:10])
+                for metric in metrics:
+                    p_control, p_validation, win_ratio, t_test, chi_squared = test_control_validation_sets(ab_test_total, metric,
+                                                                                                           day, None)
+                    df_list.append({'p_control': p_control,
+                                    'p_validation': p_validation,
+                                    'win_ratio': win_ratio,
+                                    't_test_p_value': t_test[0],
+                                    't_test_H0': t_test[1],
+                                    't_test_left_tail': t_test[2][0],
+                                    't_test_right_tail': t_test[2][1],
+                                    'chi_squared_p_value': chi_squared[0],
+                                    'chi_squared_H0': chi_squared[1],
+                                    'bayesian_approach_confidence': win_ratio,
+                                    'day': day,
+                                    'metrics': metric
+                                    })
+                    if parameters['is_segmented']:
+                        if day == days[0]:
+                            rfm_segments = list(ab_test_total['rfm'].unique())
+                        for rfm in rfm_segments:
+                            print("rfm segment :", rfm)
+                            p_control, p_validation, win_ratio, t_test, chi_squared = test_control_validation_sets(ab_test_total,
+                                                                                                                   metric, day,
                                                                                                                rfm)
 
-                        df_list_rfm.append({'p_control': p_control,
-                                            'p_validation': p_validation,
-                                            'win_ratio': win_ratio,
-                                            't_test_p_value': t_test[0],
-                                            't_test_H0': t_test[1],
-                                            't_test_left_tail': t_test[2][0],
-                                            't_test_right_tail': t_test[2][1],
-                                            'chi_squared_p_value': chi_squared[0],
-                                            'chi_squared_H0': chi_squared[1],
-                                            'bayesian_approach_confidence': win_ratio,
-                                            'rfm': rfm,
-                                            'day': day,
-                                            'metrics': metric
-                                            })
-    else:
-        print("make sure all metrics are assigned to data")
-        print("Here are not assigned columns :")
-        print(list(set(metrics) - set(list(ab_test_total.columns))))
+                            df_list_rfm.append({'p_control': p_control,
+                                                'p_validation': p_validation,
+                                                'win_ratio': win_ratio,
+                                                't_test_p_value': t_test[0],
+                                                't_test_H0': t_test[1],
+                                                't_test_left_tail': t_test[2][0],
+                                                't_test_right_tail': t_test[2][1],
+                                                'chi_squared_p_value': chi_squared[0],
+                                                'chi_squared_H0': chi_squared[1],
+                                                'bayesian_approach_confidence': win_ratio,
+                                                'rfm': rfm,
+                                                'day': day,
+                                                'metrics': metric
+                                                })
+        else:
+            print("make sure all metrics are assigned to data")
+            print("Here are not assigned columns :")
+            print(list(set(metrics) - set(list(ab_test_total.columns))))
     return pd.DataFrame(df_list), pd.DataFrame(df_list_rfm)
