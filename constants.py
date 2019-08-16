@@ -5,3 +5,4 @@ METRICS = ['login_count', 'basket_count', 'order_screen_count', 'order_count']
 DB_INSERT_UPDATE = ['basket', 'login', 'ordered', 'order_screen']
 INSERT_COLUMNS = " (session_id, client_id, date, is_control, session, rfm"
 RANDOM_CLICK_RATIO_RANGES = [0.3, 0.8]
+LAST_RFM_DATE = '2019-08-07'

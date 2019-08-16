@@ -9,7 +9,7 @@ from ab_test_generator import get_random_ab_test_generator
 
 def data_gathering(parameters):
     start_date = datetime.datetime.strptime(parameters['days_test_starts'], '%Y-%m-%d')
-    end_date = datetime.datetime.strptime(parameters['days_test_starts'], '%Y-%m-%d')
+    end_date = datetime.datetime.strptime(parameters['days_test_ends'], '%Y-%m-%d')
 
     # check; where is the data?
     data_access_fail, ab_test_total, = 0, pd.DataFrame()
@@ -22,24 +22,27 @@ def data_gathering(parameters):
             ab_test = pd.concat([control, validation])
             if not parameters['is_segmented']:
                 data_access_fail += 0.1
-                ab_test_total = ab_test[constants.AB_TEST_DATAFRAME_KEY_COLUMS + parameters.metrics]
+                metrics = parameters['metrics'] if parameters['metrics'] != [] else constants.METRICS
+                ab_test_total = ab_test[constants.AB_TEST_DATAFRAME_KEY_COLUMS + metrics]
             else:
                 data_access_fail += 0.1
-                ab_test_total = ab_test[constants.AB_TEST_DATAFRAME_KEY_COLUMS + parameters.metrics +
+                metrics = parameters['metrics'] if parameters['metrics'] != [] else constants.METRICS
+                ab_test_total = ab_test[constants.AB_TEST_DATAFRAME_KEY_COLUMS + metrics +
                                         constants.SEGMENT_DATA_COLUMN]
-
         else:
             data_access_fail = 2
             if parameters['is_from_db']:
                 ab_test = get_data_from_db(start_date, end_date)
                 if not parameters['is_segmented']:
                     data_access_fail += 0.1
-                    ab_test_total = ab_test[constants.AB_TEST_DATAFRAME_KEY_COLUMS + parameters.metrics]
+                    metrics = parameters['metrics'] if parameters['metrics'] != [] else constants.METRICS
+                    ab_test_total = ab_test[constants.AB_TEST_DATAFRAME_KEY_COLUMS + metrics]
                 else:
-                    ab_test = get_segments(ab_test, start_date)
-                    ab_test_total = ab_test[constants.AB_TEST_DATAFRAME_KEY_COLUMS + parameters.metrics +
+                    data_access_fail += 0.1
+                    ab_test = get_segments(ab_test, constants.LAST_RFM_DATE)
+                    metrics = parameters['metrics'] if parameters['metrics'] != [] else constants.METRICS
+                    ab_test_total = ab_test[constants.AB_TEST_DATAFRAME_KEY_COLUMS + metrics +
                                             constants.SEGMENT_DATA_COLUMN]
-
             else:
                 data_access_fail = 3
                 if parameters['is_data_randomly_generated']:
@@ -69,8 +72,7 @@ def get_data_from_db(start,end):
             FROM designingtest WHERE date >= '{}' and date <= '{}'
             GROUP BY client_id, is_control, date
     """.format(str(start)[0:10], str(end)[0:10])
-    return pd.read_sql(query, configurations.connection_parameters['connection_abtestdb'])
-    ab_test_total = pd.merge(ab_test_total, segments, on='client_id', how='left')
+    return pd.read_sql(query, configurations.connection_abtestdb)
 
 def get_segments(df, start_date):
     # this is also my local db. You need to update in order to connec to any db.
@@ -78,7 +80,7 @@ def get_segments(df, start_date):
             SELECT frequency_segment, monetary_segment, recency_segment, client_id
             FROM client_segments_daily WHERE date = '{}'
     """.format(str(start_date)[0:10])
-    segments = pd.read_sql(query, configurations.connection_parameters['connection_clientsdb'])
+    segments = pd.read_sql(query, configurations.connection_clientsdb)
     df = pd.merge(df, segments, on='client_id', how='left')
     df['rfm'] = df.apply(lambda row:
                          str(row['recency_segment']) + '_' +
@@ -86,12 +88,16 @@ def get_segments(df, start_date):
     return df
 
 def writing_output(insert_db, insert_db_rfm, parameters):
-    if parameters['is_there_any_prev_calcualtion_to_add_on']:
+    if parameters['is_there_any_prev_calculation_to_add_on']:
         pred_ab_test = pd.read_csv('daily_ab_test_results.csv')
-        pd.concat([pred_ab_test, insert_db]).to_csv('daily_ab_test_results.csv')
+        insert_db = pd.concat([pred_ab_test, insert_db])
         if parameters['is_segmented']:
             pred_ab_test_rfm = pd.read_csv('daily_ab_test_results_rfm.csv')
-            pd.concat([pred_ab_test_rfm, insert_db_rfm]).to_csv('daily_ab_test_results_rfm.csv')
+            insert_db_rfm = pd.concat([pred_ab_test_rfm, insert_db_rfm])
+    insert_db.to_csv('daily_ab_test_results.csv')
+    insert_db_rfm.to_csv('daily_ab_test_results_rfm.csv')
+
+
 
 
 
