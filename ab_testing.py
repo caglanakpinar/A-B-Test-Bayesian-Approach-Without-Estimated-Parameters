@@ -5,7 +5,7 @@ import random
 from scipy.stats import beta
 from scipy import stats
 from scipy.stats import chi2, chi2_contingency
-import constansts
+import constants
 
 
 
@@ -50,12 +50,13 @@ def get_metrics(df, metric, day, rfm):
     print(day)
     df_1 = df[df['day'] <= day]
     df_1 = df_1 if rfm is None else df_1[df_1['rfm'] == rfm]
-    click1 =  sum(list(df_1[df_1['is_control'] == 0][metric]))
-    click2 =  sum(list(df_1[df_1['is_control'] == 1][metric]))
+    click1 = sum(list(df_1[df_1['is_control'] == 0][metric])) if len(df_1[df_1['is_control'] != 0]) != 0 else 0
+    click2 = sum(list(df_1[df_1['is_control'] == 1][metric])) if len(df_1[df_1['is_control'] != 0]) != 0 else 0
     n1 = len(df_1[df_1['is_control'] == 0])
     n2 = len(df_1[df_1['is_control'] == 1])
     print(n1)
-    return click1, click2, n1, n2, list(df_1[df_1['is_control'] == 0][metric]), list(df_1[df_1['is_control'] == 1][metric])
+    return click1, click2, n1, n2, list(df_1[df_1['is_control'] == 0][metric]), \
+           list(df_1[df_1['is_control'] == 1][metric])
 
 def definition_of_t_test(click1, click2, n1, n2):
     pval, confidence_intervals = calculate_t_test(click1 / n1, click2 / n2, click1, click2, n1, n2)
@@ -92,7 +93,7 @@ def bayesian_approach(c_val, v_val):
     print(np.mean(wins))
     return np.mean(wins)
 
-def test_control_validation_sets(ab_test_total, metric, day, rfm):
+def     test_control_validation_sets(ab_test_total, metric, day, rfm):
     click_control, click_vald, n_control, n_vald, _control, _validation = get_metrics(ab_test_total, metric, day, None)
     print(click_control, click_vald, n_control, n_vald, day, metric)
     t_test_outputs = definition_of_t_test(click_control, click_vald, n_control, n_vald)
@@ -105,15 +106,17 @@ def test_control_validation_sets(ab_test_total, metric, day, rfm):
     return click_control / n_control, click_vald / n_vald, np.mean(wins) ,t_test_outputs, chi_squared_test_outputs
 
 def test_data(ab_test_total, parameters):
+    ab_test_total = ab_test_total.fillna(0)
     days = list(ab_test_total['day'].unique())
-    metrics = constansts.METRICS if parameters['metrics'] == [] else parameters['metrics']
+    metrics = constants.METRICS if parameters['metrics'] == [] else parameters['metrics']
     df_list = df_list_rfm = []
     p_value_contol = p_value_validation = win_list = []
     if  len(set(metrics) - set(list(ab_test_total.columns))) == 0:
         for day in days:
             print(" day :", str(day)[0:10])
             for metric in metrics:
-                p_control, p_validation, win_ratio, t_test, chi_squared = test_control_validation_sets(ab_test_total, metric,
+                p_control, p_validation, win_ratio, t_test, chi_squared = test_control_validation_sets(ab_test_total,
+                                                                                                       metric,
                                                                                                        day, None)
                 df_list.append({'p_control': p_control,
                                 'p_validation': p_validation,
@@ -134,7 +137,8 @@ def test_data(ab_test_total, parameters):
                     for rfm in rfm_segments:
                         print("rfm segment :", rfm)
                         p_control, p_validation, win_ratio, t_test, chi_squared = test_control_validation_sets(ab_test_total,
-                                                                                                               metric, day,
+                                                                                                               metric,
+                                                                                                               day,
                                                                                                                rfm)
 
                         df_list_rfm.append({'p_control': p_control,

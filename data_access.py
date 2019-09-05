@@ -9,7 +9,7 @@ from ab_test_generator import get_random_ab_test_generator
 
 def data_gathering(parameters):
     start_date = datetime.datetime.strptime(parameters['days_test_starts'], '%Y-%m-%d')
-    end_date = datetime.datetime.strptime(parameters['days_test_starts'], '%Y-%m-%d')
+    end_date = datetime.datetime.strptime(parameters['days_test_ends'], '%Y-%m-%d')
 
     # check; where is the data?
     data_access_fail, ab_test_total, = 0, pd.DataFrame()
