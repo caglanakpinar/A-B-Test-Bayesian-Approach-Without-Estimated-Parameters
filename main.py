@@ -2,6 +2,7 @@ import datetime
 import data_access
 import configurations
 import ab_testing
+import visualization
 
 
 parameters = {
@@ -38,3 +39,4 @@ def main(parameters):
 
 if __name__ == '__main__':
   main(parameters)
+  visualization.create_dashboard(parameters)
