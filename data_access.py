@@ -27,7 +27,6 @@ def data_gathering(parameters):
                 data_access_fail += 0.1
                 ab_test_total = ab_test[constants.AB_TEST_DATAFRAME_KEY_COLUMS + parameters.metrics +
                                         constants.SEGMENT_DATA_COLUMN]
-
         else:
             data_access_fail = 2
             if parameters['is_from_db']:
@@ -48,10 +47,7 @@ def data_gathering(parameters):
             data_access_fail += 1
     except:
         utils.error_print(data_access_fail, parameters)
-
     return ab_test_total
-
-
 
 def get_data_from_db(start,end):
     # this the data set that I have created at my local postgresql. Query belongs to that db
