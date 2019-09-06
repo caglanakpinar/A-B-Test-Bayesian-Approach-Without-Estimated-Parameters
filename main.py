@@ -25,11 +25,11 @@ parameters = {
      # For instance, check sample data set belongs to project or randomly generated data set
     'metrics': [], # which metrics do you want to check on for Conversion Rate. You may write more than one
     'is_segmented': True, # if every each transaction of client are segmented into the groups
-    # if this statement is true make sure that you have rfm columns in csv files or connect db for segments
-    # I have done RFM segmentation at this point, which I am familiar with the assumpions of it.
-    'segment_Data_column': 'rfm', # pls assign rfm to if there is segmented data column, otherwise keep it None
+    # if this statement is true, make sure that you have rfm columns in csv files or connect db for segments
+    # I have done RFM segmentation at this point, which I am familiar with assumptions of it.
+    'segment_Data_column': 'rfm', # pls assign rfm to .csv, if there is segmented data column, otherwise keep it None
     'is_randomly_generated_data_writing_db': False, # is updating db with a_b test outputs
-    'is_randomly_generated_data_writing_csv': True # is exporting ro .csv file with a_b test outputs
+    'is_randomly_generated_data_writing_csv': True # is exporting to .csv file with a_b test outputs
 }
 
 def main(parameters):
