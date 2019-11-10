@@ -28,7 +28,7 @@ H1: There is a significant difference between Control and Treatment groups. Stat
 
 ### Non - Parametric Statistical Test (Chi-Square (χ2) Test) 
 
-In order to use unknown estimated parameter, we might ork with Non-Parametric Statistical Testes. However, this is going to give a general answer
+In order to use unknown estimated parameter, we might work with Non-Parametric Statistical Testes. However, this is going to give a general answer
 
 ### Bayesian Approaches
 
