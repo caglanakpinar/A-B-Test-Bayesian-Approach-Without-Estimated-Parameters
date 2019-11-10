@@ -53,3 +53,6 @@ Let`s we implement an A/B Test on web page of user Interface of a button of colo
 - Now, We need to calculate X given data set what is the Q parameter. With Beyes Theorem, it is possible.
 
 ### Assumption Of Distributions:
+The assumption of Bayesian Approach is related to priors and posteriors. With given parameter, sample of data X of distributio will be Bernolli Distribution (P(X | Q)). This trerm is Bernolli Distributed. It has combinotion of two choices of Q parameter "0 or 1", "True or False". Another term which is parameter of estimated value (P(Q)) when it is sampled many times, Max,mum likelihood Theorem will be worked at it will shape as Beta Distribution. P(Q) values provide two main assumption of beta distribution 1st) Every each P(Q) values are independent. 2nd) P(Q) values are distributed around [0,1]. 
+Bernolli And Beta Distribution are going to be the Priors.
+Multiplication of Bernolli And Beta Distribution are going to be the Posteriors and it will be Beta Distributed when Likelihood Estimation is worked.
