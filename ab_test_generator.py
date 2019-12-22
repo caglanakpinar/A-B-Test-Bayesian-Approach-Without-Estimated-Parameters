@@ -6,6 +6,7 @@ import datetime
 import configurations
 import constants
 
+
 def get_sample_size(control_size, validation_size, rfm, log_type, ratio_list, main_ratio):
     control_size = int(control_size * main_ratio)
     validation_size = int(validation_size * main_ratio)
@@ -28,14 +29,12 @@ def get_sample_size(control_size, validation_size, rfm, log_type, ratio_list, ma
             s_s_valid = random.sample([0.7, 0.8, 0.9], 1)[0]
             s_s_cont = 1 - s_s_cont
 
-    print(int(control_size * s_s_cont), int(validation_size * s_s_valid))
     return int(control_size * s_s_cont), int(validation_size * s_s_valid)
 
 
 def control_validation_rfm_segment_sampling(segment_dict, client_df, rfm, total_sample_size):
     _rfm_cont_vald = list(client_df.query("rfm == @rfm")['client_id'])
     sample_size = int(((segment_dict[rfm] * total_sample_size) / 2))
-    print(sample_size, len(_rfm_cont_vald))
     if sample_size < len(_rfm_cont_vald):
         rfm_contol_sample = random.sample(_rfm_cont_vald, sample_size)
         rfm_validation_sample = list(set(_rfm_cont_vald) - set(rfm_contol_sample))
@@ -122,7 +121,9 @@ def get_rfm_segmet_ratios(client_df):
         segment_dict[rfm] = list(segments_ratios_df[segments_ratios_df['rfm'] == rfm]['ratio'])[0]
     return segment_dict, segments_ratios_df, client_df
 
+
 def get_random_ab_test_generator(start_date, end_date, client_df, parameters):
+    print("data set for Test is randomly generating !!!")
     total_sessions = parameters['total_sessions']
     total_login = parameters['total_login']
     total_baskets = parameters['total_baskets']
@@ -132,38 +133,33 @@ def get_random_ab_test_generator(start_date, end_date, client_df, parameters):
     ratio_list = get_ratio_list(constants.RANDOM_CLICK_RATIO_RANGES[0], constants.RANDOM_CLICK_RATIO_RANGES[1])
     final_df = pd.DataFrame()
     while start_date < end_date:
+        print(str(start_date)[0:10], " - creating day  of random A/B Test Results...")
         for rfm in list(client_df['rfm'].unique()):
-            print(rfm, len(client_df.query("rfm == @rfm")), segment_dict[rfm])
             _rfm_contol_sample, _rfm_validation_sample = control_validation_rfm_segment_sampling(segment_dict,
                                                                                                  client_df, rfm,
                                                                                                  total_sessions)
-
             # login
             _s_s_cont, _s_s_valid = get_sample_size(len(_rfm_contol_sample),
                                                     len(_rfm_validation_sample),
                                                     rfm, 'login', ratio_list, total_login / total_sessions)
-            print(len(_rfm_contol_sample), _s_s_cont, len(_rfm_validation_sample), _s_s_valid)
             _control_login = random.sample(_rfm_contol_sample, _s_s_cont)
             _valid_login = random.sample(_rfm_validation_sample, _s_s_valid)
             # baskets
             _s_s_cont, _s_s_valid = get_sample_size(len(_control_login),
                                                     len(_valid_login),
                                                     rfm, 'baskets', ratio_list, total_baskets / total_login)
-            print(len(_control_login), _s_s_cont, len(_valid_login), _s_s_valid)
             _control_basket = random.sample(_control_login, _s_s_cont)
             _valid_basket = random.sample(_valid_login, _s_s_valid)
             # order_screen
             _s_s_cont, _s_s_valid = get_sample_size(len(_control_basket),
                                                     len(_valid_basket),
                                                     rfm, 'order_screen', ratio_list, total_order_screen / total_baskets)
-            print(len(_control_basket), _s_s_cont, len(_valid_basket), _s_s_valid)
             _control_o_s = random.sample(_control_basket, _s_s_cont)
             _valid_o_s = random.sample(_valid_basket, _s_s_valid)
             # order
             _s_s_cont, _s_s_valid = get_sample_size(len(_control_o_s),
                                                     len(_valid_o_s),
                                                     rfm, 'order', ratio_list, total_ordered / total_order_screen)
-            print(len(_control_o_s), _s_s_cont, len(_valid_o_s), _s_s_valid)
             _control_o = random.sample(_control_o_s, _s_s_cont)
             _valid_o = random.sample(_valid_o_s, _s_s_valid)
 
@@ -197,7 +193,6 @@ def random_data_generator_write_db(final_df, parameters):
             _query = _query + _i_col + ')' + _values
 
             _query = _query + ')'
-            print(_query)
             cursor.execute(_query)
             configurations.connection_parameters.connection_abtestdb.commit()
     if parameters['is_randomly_generated_data_writing_csv']:

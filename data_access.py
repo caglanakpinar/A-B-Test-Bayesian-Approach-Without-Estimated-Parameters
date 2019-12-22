@@ -49,6 +49,7 @@ def data_gathering(parameters):
         utils.error_print(data_access_fail, parameters)
     return ab_test_total
 
+
 def get_data_from_db(start,end):
     # this the data set that I have created at my local postgresql. Query belongs to that db
     query = """
@@ -66,7 +67,7 @@ def get_data_from_db(start,end):
             GROUP BY client_id, is_control, date
     """.format(str(start)[0:10], str(end)[0:10])
     return pd.read_sql(query, configurations.connection_parameters['connection_abtestdb'])
-    ab_test_total = pd.merge(ab_test_total, segments, on='client_id', how='left')
+
 
 def get_segments(df, start_date):
     # this is also my local db. You need to update in order to connec to any db.
