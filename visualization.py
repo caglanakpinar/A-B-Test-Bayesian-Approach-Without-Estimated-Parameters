@@ -301,7 +301,7 @@ def creating_dashboard_prototype(filters, result, result_rfm):
                         'title': 'days',
                     },
                     yaxis={
-                        'title': 'Validation - Control CTR Difference '
+                        'title': 'Validation- Control CTR Difference '
                     },
                     margin={'l': 40, 'b': 30, 't': 10, 'r': 0},
                     height=450,

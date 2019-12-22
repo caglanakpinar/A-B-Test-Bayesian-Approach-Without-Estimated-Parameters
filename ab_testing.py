@@ -18,6 +18,7 @@ def calculate_t_test(p1, p2, click1, click2, n1, n2):
     confidence_intervals = [abs(p1 - p2) - confidence_limit, abs(p1 - p2) + confidence_limit]
     return pval, confidence_intervals
 
+
 def chi_squared_test(total_control, click_control, total_validation, click_validation):
     observed_df = pd.DataFrame([
         {'test': 'control', 'click': click_control, 'non_click': total_control - click_control},
@@ -42,6 +43,7 @@ def chi_squared_test(total_control, click_control, total_validation, click_valid
     print(pval, "HO REJECTED!" if pval > 0.95 else "HO ACCEPTED!")
     return [pval, "HO REJECTED!" if pval > 0.95 else "HO ACCEPTED!"]
 
+
 def get_metrics(df, metric, day, rfm):
     print("H0 : There is no difference on control and validation test sets on ", metric, " ratios.")
     print("p_control_", metric, " = ", "p_validation_", metric)
@@ -58,13 +60,14 @@ def get_metrics(df, metric, day, rfm):
     return click1, click2, n1, n2, list(df_1[df_1['is_control'] == 0][metric]), \
            list(df_1[df_1['is_control'] == 1][metric])
 
+
 def definition_of_t_test(click1, click2, n1, n2):
     pval, confidence_intervals = calculate_t_test(click1 / n1, click2 / n2, click1, click2, n1, n2)
     print(1 - pval, click1 / n1, click2 / n2, "HO REJECTED!" if 1 - pval > 0.975 or 1 - pval < 0.25 else "HO ACCEPTED!")
     return [1 - pval, "HO REJECTED!" if 1 - pval > 0.975 or 1 - pval < 0.25 else "HO ACCEPTED!", confidence_intervals]
 
-def bayesian_approach(c_val, v_val):
 
+def bayesian_approach(c_val, v_val):
     x = np.linspace(0, 1, 200)
     a_control, b_control = 1, 1
     a_val, b_val = 1, 1
@@ -93,7 +96,8 @@ def bayesian_approach(c_val, v_val):
     print(np.mean(wins))
     return np.mean(wins)
 
-def     test_control_validation_sets(ab_test_total, metric, day, rfm):
+
+def test_control_validation_sets(ab_test_total, metric, day, rfm):
     click_control, click_vald, n_control, n_vald, _control, _validation = get_metrics(ab_test_total, metric, day, None)
     print(click_control, click_vald, n_control, n_vald, day, metric)
     t_test_outputs = definition_of_t_test(click_control, click_vald, n_control, n_vald)
@@ -102,8 +106,8 @@ def     test_control_validation_sets(ab_test_total, metric, day, rfm):
     print("Bayesian approach :")
     wins = bayesian_approach(_control, _validation)
     print(str(round(wins, 3) * 100), " % times validation set of CTR is bigger than control set of CTR")
-
     return click_control / n_control, click_vald / n_vald, np.mean(wins) ,t_test_outputs, chi_squared_test_outputs
+
 
 def test_data(ab_test_total, parameters):
     ab_test_total = ab_test_total.fillna(0)
